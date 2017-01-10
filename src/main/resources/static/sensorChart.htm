@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Pull Sensor Data</title>
+<style>
+
+.x.axis line {
+  shape-rendering: auto;
+}
+
+.line {
+  fill: none;
+  stroke: #0066ff;
+  stroke-width: 1.5px;
+}
+
+svg {
+  font: 10px sans-serif;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+sup, sub {
+  line-height: 0;
+}
+
+q:before {
+  content: "â€œ";
+}
+
+q:after {
+  content: "â€";
+}
+
+blockquote q {
+  line-height: 1.5em;
+  display: inline;
+}
+
+blockquote q:before,
+blockquote q:after {
+  content: "";
+}
+
+</style>
+<body>
+<table>
+ <tr>
+   <th><img src="./img/dragSV.jpg" alt="Dragonfly (c)SVyatkin" height="70" width="135">	 </th>
+   <th><H1>Pull Sensor Data</H1>  </th>
+ </tr>
+</table>
+
+<script src="./libs/d3.v3.min.js" charset="utf-8"></script>
+<script>
+
+var n = 40,
+    random = d3.random.normal(0, 0);
+
+function chart(domain, interpolation, tick) {
+  var data = d3.range(n).map(random);
+
+  var margin = {top: 6, right: 0, bottom: 6, left: 40},
+      width = 960 - margin.right,
+      height = 120 - margin.top - margin.bottom;
+
+  var x = d3.scale.linear()
+      .domain(domain)
+      .range([0, width]);
+
+  var y = d3.scale.linear()
+      .domain([-1, 1])
+      .range([height, 0]);
+
+  var line = d3.svg.line()
+      .interpolate(interpolation)
+      .x(function(d, i) { return x(i); })
+      .y(function(d, i) { return y(d); });
+
+  var svg = d3.select("body").append("p").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .style("margin-left", -margin.left + "px")
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  svg.append("defs").append("clipPath")
+      .attr("id", "clip")
+    .append("rect")
+      .attr("width", width)
+      .attr("height", height);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(d3.svg.axis().scale(y).ticks(5).orient("right"));
+
+  var path = svg.append("g")
+      .attr("clip-path", "url(#clip)")
+    .append("path")
+      .datum(data) 
+      .attr("class", "line")
+      .attr("d", line);
+
+  tick(path, line, data, x);
+}
+</script>
+
+	<script type="text/javascript">
+	    lastData = 0.0;
+	    var wss = 'wss://' + window.location.hostname + '/wss/111';
+		var webSocket = 
+			new WebSocket(wss);
+
+		webSocket.onerror = function(event) {
+			onError(event)
+		};
+
+		webSocket.onopen = function(event) {
+			onOpen(event)
+		};
+
+		webSocket.onmessage = function(event) {
+			onMessage(event)
+		};
+
+		function onMessage(event) {
+			document.getElementById('messages').innerHTML 
+				= 'data: ' + event.data;
+			lastData = event.data;
+		}
+
+		function onOpen(event) {
+			document.getElementById('messages').innerHTML 
+				= 'Websocket Connection Established: <b>' + wss + '</b>';
+		}
+
+		function onError(event) {
+			alert(event.data);
+		}
+
+		function send() {
+			var txt = document.getElementById('inputmessage').value;
+			webSocket.send(txt);
+			return false;
+		}
+	</script>
+
+<script>(function() {
+
+var transition = d3.select({}).transition()
+    .duration(750)
+    .ease("linear");
+
+chart([1, n - 2], "basis", function tick(path, line, data, x) {
+  transition = transition.each(function() {
+
+    // push a new data point onto the back
+    data.push(lastData);
+
+    // redraw the line, and then slide it to the left, and repeat indefinitely
+    path
+        .attr("d", line)
+        .attr("transform", null)
+      .transition()
+        .attr("transform", "translate(" + x(0) + ")");
+
+    // pop the old data point off the front
+    data.shift();
+
+  }).transition().each("start", function() { tick(path, line, data, x); });
+});
+
+})();</script>
+
+<script>(function() {
+
+var n = 243,
+    duration = 750,
+    now = new Date(Date.now() - duration),
+    count = 0,
+    data = d3.range(n).map(function() { return 0; });
+
+var margin = {top: 6, right: 0, bottom: 20, left: 40},
+    width = 960 - margin.right,
+    height = 30 - margin.top - margin.bottom;
+
+var x = d3.time.scale()
+    .domain([now - (n - 2) * duration, now - duration])
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var line = d3.svg.line()
+    .interpolate("basis")
+    .x(function(d, i) { return x(now - (n - 1 - i) * duration); })
+    .y(function(d, i) { return y(d); });
+
+var svg = d3.select("body").append("p").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .style("margin-left", -margin.left + "px")
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg.append("defs").append("clipPath")
+    .attr("id", "clip")
+  .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+var axis = svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(x.axis = d3.svg.axis().scale(x).orient("bottom"));
+
+var path = svg.append("g")
+    .attr("clip-path", "url(#clip)")
+  .append("path")
+    .datum(data)
+    .attr("class", "line");
+
+var transition = d3.select({}).transition()
+    .duration(750)
+    .ease("linear");
+
+d3.select(window)
+    .on("scroll", function() { ++count; });
+
+(function tick() {
+  transition = transition.each(function() {
+
+    // update the domains
+    now = new Date();
+    x.domain([now - (n - 2) * duration, now - duration]);
+    y.domain([0, d3.max(data)]);
+
+    // push the accumulated count onto the back, and reset the count
+    data.push(Math.min(30, count));
+    count = 0;
+
+    // redraw the line
+    svg.select(".line")
+        .attr("d", line)
+        .attr("transform", null);
+
+    // slide the x-axis left
+    axis.call(x.axis);
+
+    // slide the line left
+    path.transition()
+        .attr("transform", "translate(" + x(now - (n - 1) * duration) + ")");
+
+    // pop the old data point off the front
+    data.shift();
+
+  }).transition().each("start", tick);
+})();
+
+})()</script>
+
+
+
+<div id="messages"></div>
+
+</body>
+</html>

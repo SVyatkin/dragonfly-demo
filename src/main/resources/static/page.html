@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dragonfly Websocket Broadcast Sensor Data</title>
+</head>
+<body>
+<table>
+ <tr>
+   <th><img src="./img/dragSV.jpg" alt="(c) Servey Vyatkin"></th>
+   <th><H1>Dragonfly Websocket Broadcast Sensor Data</H1>  
+   <p> Welcome to Dragonfly Websocket Broadcast Sensor Data microservice <br>
+      <a href="/simulator" target="_blank">Simulator</a> to start sensor data simulation <br>
+      <a href="/pull" target="_blank">Pull</a> to pull the sensor data from Dragonfly microservice</p> <br>
+   </th>
+ </tr>
+</table>
+
+	<div>
+		<input id="inputmessage" type="text" />
+	</div>
+	<div>
+		<input type="submit" value="Broadcast message" onclick="send()" />
+	</div>
+	<div id="messages"></div>
+	<script type="text/javascript">
+        var wss = 'wss://' + window.location.hostname + '/wss/111';
+		var webSocket = 
+			new WebSocket(wss);
+
+		webSocket.onerror = function(event) {
+			onError(event)
+		};
+
+		webSocket.onopen = function(event) {
+			onOpen(event)
+		};
+
+		webSocket.onmessage = function(event) {
+			onMessage(event)
+		};
+
+		function onMessage(event) {
+/* 			document.getElementById('messages').innerHTML 
+				+= '<br />Received message: ' + event.data; */
+		}
+
+		function onOpen(event) {
+			document.getElementById('messages').innerHTML 
+				= 'Websocket Connection Established: <b>' + wss + '</b>';
+		}
+
+		function onError(event) {
+			alert(event.data);
+		}
+
+		function send() {
+			var txt = document.getElementById('inputmessage').value;
+			webSocket.send(txt);
+			return false;
+		}
+	</script>
+</body>
+</html>

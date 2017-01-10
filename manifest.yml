@@ -1,0 +1,5 @@
+---
+applications:
+  - name: dragonfly
+    buildpack: java_buildpack
+    path: target/dragonflydemo-2.0.1.jar
